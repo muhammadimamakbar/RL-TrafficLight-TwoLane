@@ -16,7 +16,6 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
     report = list()
     report_allred = list()
 
-
     # starting brain
     start_sumo_cmd()
     all_junctions = traci.trafficlight.getIDList()
@@ -41,13 +40,10 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
     if not train and model_name is not None:
         brain.Q_eval.load_state_dict(torch.load(f'result/{model_name}.bin',map_location=brain.Q_eval.device))
 
-
-
     # variable learning
     best_wt = np.inf
     total_wt = list()
     epoch_wt = 0
-
 
     trafic_light = dict()
     agent_log = dict()
