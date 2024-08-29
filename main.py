@@ -1,5 +1,6 @@
 from learning.modules import *
 from learning.handler import *
+from time import sleep
 
 def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,option_rules='paper1',observation='tf',point_reward='wt'):
     # variabe training
@@ -227,6 +228,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                     trafic_light[junction].curr_duration_phase += 1
 
             runtime += 1
+            sleep(1) # add delay for the output loop
         # end run simulation
 
         total_wt.append(epoch_wt)
