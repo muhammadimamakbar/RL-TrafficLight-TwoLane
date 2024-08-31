@@ -98,6 +98,9 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 report.append(copy.deepcopy(simulation_log))
                 epoch_wt += sum(list(simulation_log[junction]['wt'].values()))
 
+                with open('data.json', 'w') as f:
+                    json.dump(simulation_log, f)                
+
                 os.system('cls' if os.name == 'nt' else 'clear')
                 print(f"Epoch {epochs} | Obs {observation} | Gamma {gamma} | Epsilon {epsilon}")
                 print(json.dumps(simulation_log, indent=4))
