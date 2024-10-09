@@ -1,5 +1,6 @@
 import json
 import time
+import os
 #import paho.mqtt
 
 while True:
@@ -16,10 +17,11 @@ while True:
         else :
             print("Left-to-Right")
             ## Left TL signal ON, Right TL signal OFF
-            # Publishz
+            # Publish
 
     except FileNotFoundError:
         print("File not found, waiting for data...")
 
     # Tunggu sebentar sebelum mencoba membaca lagi
     time.sleep(1)
+    os.system('cls' if os.name == 'nt' else 'clear')

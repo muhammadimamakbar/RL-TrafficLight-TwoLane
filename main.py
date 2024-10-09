@@ -2,6 +2,36 @@ from learning.modules import *
 from learning.handler import *
 from time import sleep
 
+### ADDING PAHO-MQTT LINES ###
+import paho.mqtt.client as mqtt
+
+def on_connect(mqttc, obj, flags, reason_code, properties):
+    print("reason_code: " + str(reason_code))
+
+
+def on_message(mqttc, obj, msg):
+    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
+
+
+def on_publish(mqttc, obj, mid, reason_code, properties):
+    print("mid: " + str(mid))
+
+
+def on_log(mqttc, obj, level, string):
+    print(string)
+
+# If you want to use a specific client id, use
+# mqttc = mqtt.Client("client-id")
+# but note that the client id must be unique on the broker. Leaving the client
+# id parameter empty will generate a random id for you.
+mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqttc.on_message = on_message
+mqttc.on_connect = on_connect
+mqttc.on_publish = on_publish
+# Uncomment to enable debug messages
+# mqttc.on_log = on_log
+
+### RL LINES ###
 def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,option_rules='paper1',observation='tf',point_reward='wt'):
     # variabe training
     epochs = epochs
@@ -56,6 +86,9 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
         # else: start_sumo_gui()
         else: start_sumo_cmd()
 
+        # Connect MQTT sebelum start & publish
+        mqttc.connect("broker.emqx.io", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
+
         # init all data traficlight
         for junction_number, junction in enumerate(all_junctions):
             trafic_light[junction] = Trafic_light(junction, rules.duration_all_red, rules.duration_yellow_red, rules.duration_max_phase)
@@ -97,6 +130,12 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 simulation_log[junction]['light'] = trafic_light[junction].statusLight()
                 report.append(copy.deepcopy(simulation_log))
                 epoch_wt += sum(list(simulation_log[junction]['wt'].values()))
+
+                ## MQTT Message line ##
+                light_message = simulation_log[junction]['light']
+                mqttc.loop_start()
+                mqttc.publish("tl/lights", light_message, qos=2)
+                mqttc.loop_stop()
 
                 with open('data.json', 'w') as f:
                     json.dump(simulation_log, f)                
@@ -238,6 +277,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
         # end traci sumo
         stop_sumo()
+        mqttc.disconnect()
 
     curr = datetime.datetime.now()
     curr = curr.strftime("%Y-%m-%d %H_%M")
