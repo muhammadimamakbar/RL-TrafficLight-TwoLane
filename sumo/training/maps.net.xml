@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- generated on 2023-08-15 15:45:38 by Eclipse SUMO netedit Version 1.18.0
+<!-- generated on 2024-09-19 16:29:03 by Eclipse SUMO netedit Version 1.20.0
 <configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/neteditConfiguration.xsd">
 
     <input>
-        <sumo-net-file value="sumo\maps.net.xml"/>
+        <sumocfg-file value="D:\2. Proyek Akhir\RL-TraficLight-TwoLane-main\sumo\training\setup.sumocfg"/>
+        <additional-files value=""/>
+        <route-files value="D:\2. Proyek Akhir\RL-TraficLight-TwoLane-main\sumo\training\vehicle.rou.xml"/>
+        <sumo-net-file value="D:\2. Proyek Akhir\RL-TraficLight-TwoLane-main\sumo\training\maps.net.xml"/>
     </input>
 
     <output>
-        <output-file value="sumo\maps.net.xml"/>
+        <output-file value="D:\2. Proyek Akhir\RL-TraficLight-TwoLane-main\sumo\training\maps.net.xml"/>
     </output>
 
     <processing>
@@ -32,7 +35,7 @@
 </configuration>
 -->
 
-<net version="1.16" junctionCornerDetail="5" lefthand="true" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
+<net version="1.20" junctionCornerDetail="5" lefthand="true" limitTurnSpeed="5.50" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/net_file.xsd">
 
     <location netOffset="0.00,0.00" convBoundary="-200.00,185.62,200.00,213.70" origBoundary="-10000000000.00,-10000000000.00,10000000000.00,10000000000.00" projParameter="!"/>
 
