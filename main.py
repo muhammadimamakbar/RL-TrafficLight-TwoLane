@@ -135,7 +135,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 light_message = simulation_log[junction]['light']
                 mqttc.loop_start()
                 mqttc.publish("tl/lights", light_message, qos=2)
-                mqttc.loop_stop()
+                
 
                 with open('data.json', 'w') as f:
                     json.dump(simulation_log, f)                
@@ -277,6 +277,11 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
         # end traci sumo
         stop_sumo()
+
+        light_message = "end"
+        mqttc.publish("tl/lights", light_message, qos=2)
+        mqttc.loop_stop()
+
         mqttc.disconnect()
 
     curr = datetime.datetime.now()
