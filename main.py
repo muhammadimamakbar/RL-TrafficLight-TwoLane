@@ -1,6 +1,6 @@
 from learning.modules import *
 from learning.handler import *
-from time import sleep
+import time as t
 
 ### ADDING PAHO-MQTT LINES ###
 import paho.mqtt.client as mqtt
@@ -87,7 +87,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
         else: start_sumo_cmd()
 
         # Connect MQTT sebelum start & publish
-        mqttc.connect("broker.emqx.io", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
+        mqttc.connect("raspberrypi.local", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
 
         # init all data traficlight
         for junction_number, junction in enumerate(all_junctions):
@@ -128,14 +128,17 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 simulation_log[junction]['wt'] = trafic_light[junction].totalWaitingTimePerlane()
                 simulation_log[junction]['as'] = trafic_light[junction].avgSpeedPerLane()
                 simulation_log[junction]['light'] = trafic_light[junction].statusLight()
+                starttime = t.time()
+                print("Start time: " + str(starttime))
                 report.append(copy.deepcopy(simulation_log))
                 epoch_wt += sum(list(simulation_log[junction]['wt'].values()))
 
                 ## MQTT Message line ##
+                #starttime = t.time()
                 light_message = simulation_log[junction]['light']
                 mqttc.loop_start()
                 mqttc.publish("tl/lights", light_message, qos=2)
-                
+                mqttc.publish("tl/starttime", starttime, qos=2)
 
                 with open('data.json', 'w') as f:
                     json.dump(simulation_log, f)                
@@ -266,7 +269,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                     trafic_light[junction].curr_duration_phase += 1
 
             runtime += 1
-            sleep(1) # add delay for the output loop
+            t.sleep(1) # add delay for the output loop
         # end run simulation
 
         total_wt.append(epoch_wt)
