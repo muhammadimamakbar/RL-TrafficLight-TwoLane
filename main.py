@@ -519,6 +519,8 @@ class Ui_MainWindow(object):
         self.button_start.clicked.connect(self.getInfo)
         self.button_reset.clicked.connect(self.resetInfo) # type: ignore
 
+        self.output_log.append("[{0}] App is opened.".format(datetime.now()))
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "RL for Two Lane Traffic Light Simulator"))
@@ -629,4 +631,4 @@ if __name__ == "__main__":
     MainWindow.show()
     sys.exit(app.exec_())
 
-    run(train=train,model_name=model_name,epochs=epochs,steps=steps,gamma=gamma,epsilon=epsilon,option_rules=rules,observation=observation,point_reward=point_reward)
+    # run(train=train,model_name=model_name,epochs=epochs,steps=steps,gamma=gamma,epsilon=epsilon,option_rules=rules,observation=observation,point_reward=point_reward)
