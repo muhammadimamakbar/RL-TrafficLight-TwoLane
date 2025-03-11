@@ -8,17 +8,31 @@ import paho.mqtt.client as mqtt
 def on_connect(mqttc, obj, flags, reason_code, properties):
     print("reason_code: " + str(reason_code))
 
-
 def on_message(mqttc, obj, msg):
-    print(msg.topic + " " + str(msg.qos) + " " + str(msg.payload))
-
+    if msg.topic == "tl/ir-sensor-left":
+        ir_sensor_left = int(msg.payload.decode("utf-8"))
+        print(msg.topic + ": " + str(ir_sensor_left))
+    elif msg.topic == "tl/ir-sensor-right":
+        ir_sensor_right = int(msg.payload.decode("utf-8"))
+        print(msg.topic + ": " + str(ir_sensor_right))
+    else:
+        print(msg.topic + " [QOS: " + str(msg.qos) + "]: " 
+              + str(msg.payload.decode("utf-8")))
 
 def on_publish(mqttc, obj, mid, reason_code, properties):
     print("mid: " + str(mid))
 
+def on_subscribe(mqttc, obj, mid, reason_code_list, properties):
+    print("Subscribed: " + str(mid) + " " + str(reason_code_list))
 
 def on_log(mqttc, obj, level, string):
     print(string)
+
+# Since we need to get some datas from IR sensor,
+# we need to add MQTT subscriber function.
+# This adds on the function of the program/server from just being a publisher
+# to being a publisher and subscriber simultaneously.
+# <ADD THE SUBSCRIBER FUNCTION HERE>
 
 # If you want to use a specific client id, use
 # mqttc = mqtt.Client("client-id")
@@ -28,6 +42,7 @@ mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_message = on_message
 mqttc.on_connect = on_connect
 mqttc.on_publish = on_publish
+mqttc.on_subscribe = on_subscribe
 # Uncomment to enable debug messages
 # mqttc.on_log = on_log
 
@@ -87,8 +102,10 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
         else: start_sumo_cmd()
 
         # Connect MQTT sebelum start & publish
-        mqttc.connect("raspberrypi.local", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
-
+        #mqttc.connect("raspberrypi.local", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
+        mqttc.connect("mqtt.eclipseprojects.io", 1883, 60)
+        mqttc.subscribe("tl/#") # Subscribe ke topik data dari alat
+        
         # init all data traficlight
         for junction_number, junction in enumerate(all_junctions):
             trafic_light[junction] = Trafic_light(junction, rules.duration_all_red, rules.duration_yellow_red, rules.duration_max_phase)
@@ -108,6 +125,8 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
         _option_light_status = list()
         _option_green_times = list()
 
+        ir_sensor_left = 0
+        ir_sensor_right = 0
 
         # start run simulation every seconds
         while runtime <= steps:
@@ -128,6 +147,22 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 simulation_log[junction]['wt'] = trafic_light[junction].totalWaitingTimePerlane()
                 simulation_log[junction]['as'] = trafic_light[junction].avgSpeedPerLane()
                 simulation_log[junction]['light'] = trafic_light[junction].statusLight()
+
+                light_message = simulation_log[junction]['light']
+
+                # CHECK THE SIGNAL CHANGE HERE
+                ## IF light.isChanged :
+                ### DO allRed WHILE counter.isDifferent
+                
+                if light_message != prev_light_message:
+                    while True:
+                        if ir_sensor_left != ir_sensor_right:
+                            mqttc.publish("tl/lights", "rr", qos=2)
+                        else:
+                            ir_sensor_left = 0
+                            ir_sensor_right = 0
+                            break
+                
                 starttime = t.time()
                 print("Start time: " + str(starttime))
                 report.append(copy.deepcopy(simulation_log))
@@ -135,10 +170,11 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
                 ## MQTT Message line ##
                 #starttime = t.time()
-                light_message = simulation_log[junction]['light']
                 mqttc.loop_start()
                 mqttc.publish("tl/lights", light_message, qos=2)
                 mqttc.publish("tl/starttime", starttime, qos=2)
+
+                prev_light_message = light_message
 
                 with open('data.json', 'w') as f:
                     json.dump(simulation_log, f)                
