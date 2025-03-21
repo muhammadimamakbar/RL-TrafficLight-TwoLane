@@ -114,7 +114,6 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
             agent_log[junction]['prev_action'] = 0
             agent_log[junction]['prev_observation'] = [0] * trafic_light[junction].lanes_number * rules.observasi_len
 
-
         runtime = 0
         epoch_wt = 0
 
@@ -127,6 +126,9 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
         ir_sensor_left = 0
         ir_sensor_right = 0
+
+        light_message = ""
+        prev_light_message = ""
 
         # start run simulation every seconds
         while runtime <= steps:
@@ -149,16 +151,21 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 simulation_log[junction]['light'] = trafic_light[junction].statusLight()
 
                 light_message = simulation_log[junction]['light']
+                print(light_message)
 
                 # CHECK THE SIGNAL CHANGE HERE
                 ## IF light.isChanged :
                 ### DO allRed WHILE counter.isDifferent
                 
                 if light_message != prev_light_message:
+                    print(light_message != prev_light_message)
                     while True:
-                        if ir_sensor_left != ir_sensor_right:
-                            mqttc.publish("tl/lights", "rr", qos=2)
+                        if ir_sensor_left != ir_sensor_right :
+                            print(ir_sensor_left != ir_sensor_right)
+                            mqttc.publish("tl/lights", "rr")
+                            t.sleep(1)
                         else:
+                            print(ir_sensor_left != ir_sensor_right)
                             ir_sensor_left = 0
                             ir_sensor_right = 0
                             break
@@ -174,14 +181,15 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                 mqttc.publish("tl/lights", light_message, qos=2)
                 mqttc.publish("tl/starttime", starttime, qos=2)
 
+                print(prev_light_message)
                 prev_light_message = light_message
 
                 with open('data.json', 'w') as f:
                     json.dump(simulation_log, f)                
 
-                os.system('cls' if os.name == 'nt' else 'clear')
+                #os.system('cls' if os.name == 'nt' else 'clear')
                 print(f"Epoch {epochs} | Obs {observation} | Gamma {gamma} | Epsilon {epsilon}")
-                print(json.dumps(simulation_log, indent=4))
+                # print(json.dumps(simulation_log, indent=4))
 
                 # if model_name is not None :
                 #     print('brain')
