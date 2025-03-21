@@ -2,6 +2,9 @@ from learning.modules import *
 from learning.handler import *
 import time as t
 
+ir_sensor_left = 0
+ir_sensor_right = 0
+
 ### ADDING PAHO-MQTT LINES ###
 import paho.mqtt.client as mqtt
 
@@ -9,6 +12,8 @@ def on_connect(mqttc, obj, flags, reason_code, properties):
     print("reason_code: " + str(reason_code))
 
 def on_message(mqttc, obj, msg):
+    global ir_sensor_left, ir_sensor_right
+
     if msg.topic == "tl/ir-sensor-left":
         ir_sensor_left = int(msg.payload.decode("utf-8"))
         print(msg.topic + ": " + str(ir_sensor_left))
@@ -48,6 +53,9 @@ mqttc.on_subscribe = on_subscribe
 
 ### RL LINES ###
 def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,option_rules='paper1',observation='tf',point_reward='wt'):
+    
+    global ir_sensor_left, ir_sensor_right
+    
     # variabe training
     epochs = epochs
     steps = steps
@@ -105,6 +113,7 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
         #mqttc.connect("raspberrypi.local", 1883, 60) ## Opsi awal 'mqtt.eclipseprojects.io'
         mqttc.connect("mqtt.eclipseprojects.io", 1883, 60)
         mqttc.subscribe("tl/#") # Subscribe ke topik data dari alat
+        mqttc.loop_start()
         
         # init all data traficlight
         for junction_number, junction in enumerate(all_junctions):
@@ -123,9 +132,6 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
         _option_light_status = list()
         _option_green_times = list()
-
-        ir_sensor_left = 0
-        ir_sensor_right = 0
 
         light_message = ""
         prev_light_message = ""
@@ -170,6 +176,9 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
                             ir_sensor_right = 0
                             break
                 
+                print("Sensor 1: "+str(ir_sensor_left))
+                print("Sensor 2: "+str(ir_sensor_right))
+
                 starttime = t.time()
                 print("Start time: " + str(starttime))
                 report.append(copy.deepcopy(simulation_log))
@@ -177,7 +186,6 @@ def run(train=True,model_name=None,epochs=1,steps=600,gamma=0.8,epsilon=0.3,opti
 
                 ## MQTT Message line ##
                 #starttime = t.time()
-                mqttc.loop_start()
                 mqttc.publish("tl/lights", light_message, qos=2)
                 mqttc.publish("tl/starttime", starttime, qos=2)
 
